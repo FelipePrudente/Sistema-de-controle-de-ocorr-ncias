@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ocorrências - Cadastro e Relatório</title>
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("ocorrencias-theme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container">
+        <div class="topbar__title">
+          <h1>Ocorrências</h1>
+          <p>Cadastrar, acompanhar e gerar relatório para Diretoria</p>
+        </div>
+        <div class="topbar__actions">
+          <button id="btnToggleTheme" class="btn btn--ghost" type="button" title="Alternar tema">Tema claro</button>
+          <button id="btnExportCsv" class="btn btn--secondary" type="button">Exportar CSV</button>
+          <button id="btnExportXls" class="btn btn--secondary" type="button">Exportar Excel (por dia)</button>
+          <button id="btnExportPptx" class="btn btn--secondary" type="button">Exportar PPTX</button>
+          <button id="btnPrint" class="btn btn--secondary" type="button">Imprimir / Salvar em PDF</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="card__header">
+          <h2>Novo registro</h2>
+          <p>Preencha os campos e salve a ocorrência do dia.</p>
+        </div>
+
+        <form id="formOcorrencia" class="form">
+          <div class="grid">
+            <label class="field">
+              <span class="field__label">Data</span>
+              <input id="data" name="data" type="date" required />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Severidade</span>
+              <select id="severidade" name="severidade" required>
+                <option value="" selected disabled>Selecione</option>
+                <option>Baixa</option>
+                <option>Média</option>
+                <option>Alta</option>
+                <option>Crítica</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Status</span>
+              <select id="status" name="status" required>
+                <option>Aberta</option>
+                <option>Em andamento</option>
+                <option>Bloqueada</option>
+                <option>Resolvida</option>
+                <option>Encerrada</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Caderno</span>
+              <select id="caderno" name="caderno" required>
+                <option value="" selected disabled>Selecione</option>
+                <option>Executivo</option>
+                <option>Legislativo</option>
+                <option>Municípios</option>
+                <option>Empresarial</option>
+                <option>Outros</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label" id="secaoLabel">Seção</span>
+              <select id="secao" name="secao" required>
+                <option value="" selected disabled>Selecione o caderno primeiro</option>
+              </select>
+              <input
+                id="secaoText"
+                name="secaoText"
+                type="text"
+                hidden
+                placeholder="Informe onde foi a ocorrência"
+              />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Responsável</span>
+              <input id="responsavel" name="responsavel" type="text" placeholder="Nome / time" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">Resumo</span>
+            <input id="resumo" name="resumo" type="text" maxlength="160" placeholder="Uma linha objetiva (máx. 160)" required />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Detalhes</span>
+            <textarea id="detalhes" name="detalhes" rows="4" placeholder="Descreva o que ocorreu, impacto e ações"></textarea>
+          </label>
+          <div id="detalhesImgs" class="imgPaste" aria-label="Imagens coladas no Detalhes"></div>
+
+          <label class="field">
+            <span class="field__label">Observações</span>
+            <textarea id="acao" name="acao" rows="3" placeholder="Observações complementares"></textarea>
+          </label>
+
+          <div class="form__actions">
+            <button id="btnSalvar" class="btn" type="submit">Salvar ocorrência</button>
+            <button id="btnLimpar" class="btn btn--ghost" type="reset">Limpar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Relatório</h2>
+          <p>Filtre e organize as ocorrências cadastradas.</p>
+        </div>
+
+        <div class="filters">
+          <div class="grid grid--filters">
+            <label class="field">
+              <span class="field__label">De</span>
+              <input id="fDe" type="date" />
+            </label>
+            <label class="field">
+              <span class="field__label">Até</span>
+              <input id="fAte" type="date" />
+            </label>
+            <label class="field field--checkbox">
+              <span class="field__label">Abertas</span>
+              <label class="check">
+                <input id="fSomenteAbertas" type="checkbox" />
+                <span>Somente ocorrências abertas</span>
+              </label>
+            </label>
+            <div class="field field--multifilter">
+              <span class="field__label">Status</span>
+              <div id="fStatusGroup" class="filterChecks" role="group" aria-label="Filtrar por status">
+                <label class="filterCheck"><input type="checkbox" value="Aberta" /> Aberta</label>
+                <label class="filterCheck"><input type="checkbox" value="Em andamento" /> Em andamento</label>
+                <label class="filterCheck"><input type="checkbox" value="Bloqueada" /> Bloqueada</label>
+                <label class="filterCheck"><input type="checkbox" value="Resolvida" /> Resolvida</label>
+                <label class="filterCheck"><input type="checkbox" value="Encerrada" /> Encerrada</label>
+              </div>
+            </div>
+            <div class="field field--multifilter">
+              <span class="field__label">Severidade</span>
+              <div id="fSeveridadeGroup" class="filterChecks" role="group" aria-label="Filtrar por severidade">
+                <label class="filterCheck"><input type="checkbox" value="Baixa" /> Baixa</label>
+                <label class="filterCheck"><input type="checkbox" value="Média" /> Média</label>
+                <label class="filterCheck"><input type="checkbox" value="Alta" /> Alta</label>
+                <label class="filterCheck"><input type="checkbox" value="Crítica" /> Crítica</label>
+              </div>
+            </div>
+            <label class="field">
+              <span class="field__label">Busca (texto)</span>
+              <input id="fBusca" type="search" placeholder="Área, resumo, caderno, seção, detalhes..." />
+            </label>
+          </div>
+          <div class="filters__actions">
+            <button id="btnAplicarFiltros" class="btn btn--secondary" type="button">Aplicar</button>
+            <button id="btnLimparFiltros" class="btn btn--ghost" type="button">Limpar filtros</button>
+            <button id="btnRelatorioAbertas" class="btn" type="button">Gerar relatório (Abertas)</button>
+          </div>
+        </div>
+
+        <div class="report">
+          <div class="report__meta">
+            <div>
+              <strong>Total:</strong> <span id="totalCount">0</span>
+              <span class="muted">|</span>
+              <strong>Abertas:</strong> <span id="openCount">0</span>
+              <span class="muted">|</span>
+              <strong>Críticas:</strong> <span id="criticalCount">0</span>
+            </div>
+            <div class="report__metaActions">
+              <button id="btnLimparTudo" class="btn btn--danger" type="button">Apagar tudo</button>
+            </div>
+          </div>
+
+          <div class="tableWrap">
+            <table class="table" aria-label="Ocorrências cadastradas">
+              <thead>
+                <tr>
+                  <th class="thSortable" scope="col">
+                    <button type="button" id="btnSortData" class="thSortBtn" aria-sort="descending">
+                      Data <span class="sortIcon" aria-hidden="true">▼</span>
+                    </button>
+                  </th>
+                  <th>Severidade</th>
+                  <th>Status</th>
+                  <th>Caderno</th>
+                  <th>Seção</th>
+                  <th>Resumo</th>
+                  <th>Responsável</th>
+                  <th class="noPrint">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <p id="emptyState" class="emptyState" hidden>Nenhuma ocorrência encontrada com os filtros atuais.</p>
+        </div>
+      </section>
+
+      <dialog id="dlgEdit" class="dialog">
+        <form method="dialog" class="dialog__content" id="formEdit">
+          <div class="dialog__header">
+            <h3>Editar ocorrência</h3>
+            <button class="iconBtn" value="cancel" aria-label="Fechar">×</button>
+          </div>
+
+          <input type="hidden" id="editId" />
+
+          <div class="grid">
+            <label class="field">
+              <span class="field__label">Data</span>
+              <input id="eData" type="date" required />
+            </label>
+            <label class="field">
+              <span class="field__label">Severidade</span>
+              <select id="eSeveridade" required>
+                <option>Baixa</option>
+                <option>Média</option>
+                <option>Alta</option>
+                <option>Crítica</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">Status</span>
+              <select id="eStatus" required>
+                <option>Aberta</option>
+                <option>Em andamento</option>
+                <option>Bloqueada</option>
+                <option>Resolvida</option>
+                <option>Encerrada</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">Responsável</span>
+              <input id="eResponsavel" type="text" />
+            </label>
+            <label class="field">
+              <span class="field__label">Caderno</span>
+              <select id="eCaderno" required>
+                <option>Executivo</option>
+                <option>Legislativo</option>
+                <option>Municípios</option>
+                <option>Empresarial</option>
+                <option>Outros</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label" id="eSecaoLabel">Seção</span>
+              <select id="eSecao" required></select>
+              <input
+                id="eSecaoText"
+                type="text"
+                hidden
+                placeholder="Informe onde foi a ocorrência"
+              />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">Resumo</span>
+            <input id="eResumo" type="text" maxlength="160" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Detalhes</span>
+            <textarea id="eDetalhes" rows="4"></textarea>
+          </label>
+          <div id="eDetalhesImgs" class="imgPaste" aria-label="Imagens coladas no Detalhes (edição)"></div>
+          <label class="field">
+            <span class="field__label">Observações</span>
+            <textarea id="eAcao" rows="3" placeholder="Observações complementares"></textarea>
+          </label>
+
+          <div class="dialog__actions">
+            <button class="btn btn--secondary" value="cancel" type="button" id="btnCancelEdit">Cancelar</button>
+            <button class="btn" value="ok" type="submit">Salvar alterações</button>
+          </div>
+        </form>
+      </dialog>
+
+      <footer class="footer">
+        <p class="muted">
+          Dados salvos no navegador (LocalStorage). Para backup, use “Exportar CSV”.
+        </p>
+      </footer>
+    </main>
+
+    <script src="https://unpkg.com/pptxgenjs/dist/pptxgen.bundle.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
